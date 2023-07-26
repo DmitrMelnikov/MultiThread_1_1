@@ -8,10 +8,35 @@ public class Main {
         String[] texts = new String[25];
         long startTs = System.currentTimeMillis(); // start time THREADS
 
+
         ExecutorService threadPool = Executors.newFixedThreadPool(texts.length);
         for (int i = 0; i < texts.length; i++) {
             texts[i] = generateText("aab", 30_000);
-            Future<Integer> future = threadPool.submit(new MyCallable(texts[i]));
+            String text = texts[i];
+            Callable task = () -> {
+                int maxSize = 0;
+                for (int t = 0; t < text.length(); t++) {
+                    for (int j = 0; j < text.length(); j++) {
+                        if (t >= j) {
+                            continue;
+                        }
+                        boolean bFound = false;
+                        for (int k = t; k < j; k++) {
+                            if (text.charAt(k) == 'b') {
+                                bFound = true;
+                                break;
+                            }
+                        }
+                        if (!bFound && maxSize < j - t) {
+                            maxSize = j - t;
+                        }
+                    }
+                }
+
+                return maxSize;
+            };
+
+            Future<Integer> future = threadPool.submit(task);
             futures.add(future);
         }
         threadPool.shutdown();
@@ -28,6 +53,8 @@ public class Main {
 
         long endTs = System.currentTimeMillis(); // end time THREADS
         System.out.println("Time: THREADS " + (endTs - startTs) + "ms");
+
+ 
 
 //        long startFor = System.currentTimeMillis(); // start time FOR
 //        for (String text : texts) {
